@@ -975,6 +975,7 @@ static blk_qc_t __submit_bio_noacct(struct bio *bio)
 		/*
 		 * Create a fresh bio_list for all subordinate requests.
 		 */
+		 // 剩余的bio
 		bio_list_on_stack[1] = bio_list_on_stack[0];
 		bio_list_init(&bio_list_on_stack[0]);
 
@@ -988,8 +989,10 @@ static blk_qc_t __submit_bio_noacct(struct bio *bio)
 		bio_list_init(&same);
 		while ((bio = bio_list_pop(&bio_list_on_stack[0])) != NULL)
 			if (q == bio->bi_disk->queue)
+				// 相同device的bio
 				bio_list_add(&same, bio);
 			else
+				//不同device的bio
 				bio_list_add(&lower, bio);
 
 		/*
