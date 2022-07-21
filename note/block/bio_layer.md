@@ -27,7 +27,18 @@ generic_make_request（submit_bio_noacct）允许等待之前的bio返回。如�
 2. To avoid deadlocks, drivers must never risk waiting for a request after submitting one to generic_make_request.  This includes never allocing from a mempool twice in the one call to a make_request_fn.
 3. 旧逻辑中，driver会在loop中进行split，split后会继续进行split。新逻辑要求split后提交第一个bio，并直接返回。等待从栈中拿出bio后，如果需要split，再继续处理。
 
+## device queue plugging
+
+设备通常per-request的overhead会比较大，所以gather a batch of requests together and submit them as a unit 会更高效。plugging就是为此设计的。
+
+现在的实现中，plugging是per-process的。当fs或者其他client打算发起一系列bio时，通常在开始之前调用blk_start_plug，在结束时调用blk_finish_plug，或者在调度时调用blk_schdule_flush_plug。
+
+在__submit_bio中会允许bio决定是否加入到plug中，以更高效地处理bio。
+
+当调度时，如果进程由于等待任何东西被block了，将处理plug中的所有东西。这避免了进程等待plug中的bio的情况。
+
 ## bio split
+
 什么时候可能需要split: (blk_bio_segment_spit)
 - bi_vec数目超过max_segments (scatter gather io允许的最大段数)
 - 累计sectors超过bio层允许的单次最大发送大小(max_sector_kb)
