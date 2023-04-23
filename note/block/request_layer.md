@@ -1,3 +1,5 @@
+## request的merge
+
 ## request的完成
 对于mq来说，blk_mq_complete_request 是中断处理函数。完成request的方式主要有以下几种：
 1. 直接在中断上下文中通过调用驱动的.complete来完成
@@ -16,3 +18,5 @@
 对于绝大部分仅支持单queue的controller，仅有一个 irq vector用于处理IO completion，通常这个irq affinity会设置为所有cpu，但是在绝大多数arch中，会指定一个cpu处理。
 
 在这种情况下，单queue controller的io completion不要在中断上下文中完成，否则会导致较长的irq关闭的时间，从而降低io性能。
+
+在complete函数中调用到blk_update_request会调用req_bio_endio

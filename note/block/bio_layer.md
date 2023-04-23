@@ -39,7 +39,7 @@ generic_make_request（submit_bio_noacct）允许等待之前的bio返回。如�
 
 ## bio split
 
-什么时候可能需要split: (blk_bio_segment_spit)
+什么时候可能需要split: (blk_bio_segment_split)
 - bi_vec数目超过max_segments (scatter gather io允许的最大段数)
 - 累计sectors超过bio层允许的单次最大发送大小(max_sector_kb)
 - 某个bi_vec跨过了一个page
@@ -55,3 +55,11 @@ generic_make_request（submit_bio_noacct）允许等待之前的bio返回。如�
 - 调整split和bio的bi_size和bi_sector
 - split->bi_private = bio (bio_chain)
 - 将bio压入栈中，等待split处理完之后再出栈(submit_bio_noacct->submit_bio_noacct_nocheck)
+
+## bio merge
+
+在bio split 完之后可以进行。
+首先会尝试检查plug list中是否可以merge(blk_attempt_plug_merge),如果无法merge,之后会尝试调度器/同一个software queue中进行merge。
+如果都没有merge成功，这个bio就会变成request下发。
+
+tag的queue_depth就是硬件队列的queue_depth
