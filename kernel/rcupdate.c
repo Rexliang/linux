@@ -181,6 +181,7 @@ static void rcu_start_batch(struct rcu_ctrlblk *rcp, struct rcu_state *rsp,
 	if (next_pending)
 		rcp->next_pending = 1;
 
+	/* 存在pending 且不存在正在处理的rcu */
 	if (rcp->next_pending &&
 			rcp->completed == rcp->cur) {
 		/* Can't change, since spin lock held. */
@@ -191,6 +192,7 @@ static void rcu_start_batch(struct rcu_ctrlblk *rcp, struct rcu_state *rsp,
 		 * before it can see new value of cur.
 		 */
 		smp_wmb();
+		/* 下一轮cur开始 */
 		rcp->cur++;
 	}
 }
